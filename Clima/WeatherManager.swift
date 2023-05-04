@@ -10,18 +10,31 @@ import Foundation
 import CoreLocation
 
 protocol WeatherManagerDelegate {
-    func didUpdateWeather(_ weatherManager: WeatherManager)
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel)
     func didFailWithError(error: Error)
 }
 
 struct WeatherManager {
-    let baseURL = "https://api.openweathermap.org/data/2.5/weather?appid=\(Constants.API_KEY)&units=metric"
+//    let baseURL = "https://api.openweathermap.org/data/2.5/weather?appid=\(Constants.API_KEY)&units=metric"
+//    let baseURL = "https://api.openweathermap.org/data/2.5/weather?lat=37.33&lon=126.58&appid=\(Constants.API_KEY)"
+    let baseURL = "https://api.openweathermap.org/data/2.5/weather"
     
     var delegate: WeatherManagerDelegate?
     
     func fetchWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
-        let urlString = "\(baseURL)&lat=\(latitude)&lat=\(longitude)"
+        let urlString = "\(baseURL)?lat=\(latitude)&lon=\(longitude)&appid=\(Constants.API_KEY)&units=metric"
+        print("fetchWeather(lat:,lon:) Request URL: \(urlString)")
         
+        performRequest(with: urlString)
+        
+        
+    }
+    
+    func fetchWeather(city: String) {
+        let urlString = "\(baseURL)?q=\(city)&appid=\(Constants.API_KEY)&units=metric"
+        print("fetchWeather(city:) Request URL: \(urlString)")
+        
+        performRequest(with: urlString)
     }
     
     func performRequest(with urlString: String) {
@@ -35,11 +48,12 @@ struct WeatherManager {
                 
                 if let safeData = data {
                     if let weather = self.parseJSON(safeData) {
-                        
+                        self.delegate?.didUpdateWeather(self, weather: weather)
                     }
                 }
                 
             }
+            task.resume()
         }
     } // performRequest()
     
@@ -62,3 +76,4 @@ struct WeatherManager {
     
     
 }
+
